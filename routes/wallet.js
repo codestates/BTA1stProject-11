@@ -4,6 +4,7 @@ const router = express.Router();
 const lightwallet = require("eth-lightwallet");
 const fs = require('fs');
 const MinaSDK = require("@o1labs/client-sdk");
+const Mina = require('snarkjs');
 
 /*
 * DB : mysql
@@ -16,6 +17,10 @@ const connection = mysql.createConnection({
 })
 
 connection.connect();
+
+router.get("/test", async (req, res) => {
+    console.log(Mina);
+});
 
 
 router.post("/register", async (req, res) => {
