@@ -2,6 +2,19 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
+
+  const init = async() => {
+
+    if(window.mina){
+      let data = await window.mina.requestAccounts()
+      console.log(data);
+      return data;
+    }
+
+  }
+
+  init();
+
   return (
     <div className="App">
       <header className="App-header">
