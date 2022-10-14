@@ -5,7 +5,8 @@ const lightwallet = require("eth-lightwallet");
 const fs = require('fs');
 const MinaSDK = require("@o1labs/client-sdk");
 const snarky = require('snarkyjs');
-//const _Mina = require('mina');
+const { PublicKey } = require('snarkyjs');
+const fetch = require('node-fetch');
 
 /*
 * DB : mysql
@@ -21,15 +22,16 @@ connection.connect();
 
 router.post("/test", async (req, res) => {
     console.log(snarky);
-    snarky(publicKey: PublicKey_, tokenId: Field);
-    console.log(snarky.Mina.hasAccount(type PublicKey('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
-    //console.log(snarky.Mina.getBalance(_publicKey,0));
-    // const _publicKey = "B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U";
-    // console.log("TEST00 " + Mina.Account(_publicKey));
-    // const _address = Mina.Account(_publicKey);
-    // console.log("TEST01 " + _address.balance.get());
-    // const _getBalance =  _address.balance;
-    // console.log("TEST02 " + _getBalance);
+    const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
+    snarky.setGraphqlEndpoint(url);
+    
+    const _address = await snarky.fetchAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U'));
+
+    console.log("@#@#@#@ " + _address);
+    console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
+    console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS')));
+    console.log(snarky.Mina.hasAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
+    console.log(snarky.Mina.hasAccount(PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS')));
 });
 
 

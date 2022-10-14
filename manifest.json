@@ -1,0 +1,9 @@
+{
+    "name": "Mina protocol Wallet Extension",
+    "description": "Bithumb Wallet Project",
+    "version": "1.0",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "manifest_version": 3
+}
