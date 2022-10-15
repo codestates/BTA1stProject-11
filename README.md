@@ -11,7 +11,8 @@
   * npm install --save @o1labs/client-sdk (MINA library)
   * npm install express-routes (express route)
   * npm install snarkyjs (zk rpc 지원?)
-  * npm install node-fetch
+  * npm install node-fetch (안될 경우 node-fetch 제거 후 npm install node-fetch@2)
+  * npm install axios
 
 
 🧷[About MINA Domain]

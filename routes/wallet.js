@@ -7,10 +7,12 @@ const MinaSDK = require("@o1labs/client-sdk");
 const snarky = require('snarkyjs');
 const { PublicKey } = require('snarkyjs');
 const fetch = require('node-fetch');
+const axios = require('axios');
 
 /*
 * DB : mysql
 */
+/*
 const connection = mysql.createConnection({
     host : 'localhost',
     user : 'root',
@@ -19,14 +21,15 @@ const connection = mysql.createConnection({
 })
 
 connection.connect();
+*/
 
 router.post("/test", async (req, res) => {
     console.log(snarky);
     const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
     snarky.setGraphqlEndpoint(url);
-    
-    const _address = await snarky.fetchAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U'));
 
+    const _address = await snarky.fetchAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U'));
+        
     console.log("@#@#@#@ " + _address);
     console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
     console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS')));
@@ -92,4 +95,45 @@ router.post("/register", async (req, res) => {
   })
   ;
   
+  const getAccountInfoQuery = (publicKey) => {
+    return `{account(publicKey: \"${publicKey}\") {
+          balance {
+            total
+          }
+          delegate
+          nonce
+      }}`;
+  };
+  
+  router.get("/balance", async (req, res) => {
+      console.log(snarky);
+      const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
+      const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
+      let resultInfo = {};
+  
+      axios
+        .get(url, {
+          params: {
+            query: `${getAccountInfoQuery(_publicKey)}`
+          }
+        })
+        .then((result) => {
+          const _data = result.data.data;_publicKey
+          const _account = _data.account;
+          
+          resultInfo.balance = _account.balance.total;
+          resultInfo.delegate = _account.delegate;
+          resultInfo.nonce = _account.nonce;
+
+          console.log(`balance total: ${_account.balance.total}`);
+          console.log(`delegate: ${_account.delegate}`);
+          console.log(`nonce: ${_account.nonce}`);
+
+          res.json({ message: "ok", data: resultInfo });
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+  });
+
 module.exports = router;
