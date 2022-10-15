@@ -5,8 +5,8 @@ const lightwallet = require("eth-lightwallet");
 const fs = require('fs');
 const MinaSDK = require("@o1labs/client-sdk");
 const snarky = require('snarkyjs');
-const { PublicKey } = require('snarkyjs');
-const fetch = require('node-fetch');
+const { PublicKey, PrivateKey } = require('snarkyjs');
+//const fetch = require('node-fetch');
 const axios = require('axios');
 
 /*
@@ -106,7 +106,7 @@ router.post("/register", async (req, res) => {
   };
   
   router.get("/balance", async (req, res) => {
-      console.log(snarky);
+      //console.log(snarky);
       const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
       const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
       let resultInfo = {};
@@ -134,6 +134,58 @@ router.post("/register", async (req, res) => {
         .catch((err) => {
           console.log(err);
         })
+  });
+
+
+  router.post("/send", async (req, res) => {
+
+    console.log(" !!! START _preTransaction signedPayment method !!!");
+
+      
+    const _to = PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U');
+    console.log(" !!! Test 01 !!!" + _to);
+    const _from = PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS');
+    console.log(" !!! Test 02 !!!" + _from);
+    const _pkKey = PrivateKey.fromBase58('EKE25kcSt1Jg8xkcQy6ZYSnzbNi3MZ39PGgD2k4D9ZdfgkF7KB4V');
+    console.log(" !!! Test 03 !!!" + _pkKey);
+    const keys = {_pkKey, _to}
+    
+    console.log(" !!! Test 04 !!!" + keys);
+
+
+    const signedPayment = MinaSDK.signPayment(
+      {
+        to: _from,
+        from: _to,
+        amount: 10,
+        fee: 1,
+        nonce: 0,
+      },
+      keys
+    );
+
+    console.log(" !!! Sending Mina !!!");
+    signedPayment();
+    console.log(" !!! End Sending!!!");
+
+    /*
+    * 송금을 위한 transaction id 생성 
+    * mina.ts 참고 
+    * sendTransaction의 파라미터는 trasaction임. 
+    * transaction의 파마미터는 FeePayerSpec임 
+    * 
+    *  param : 
+    *  return : transactionid 
+    console.log(" !!! START _preTransaction method !!!");
+    const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
+  
+
+    snarky.Mina.setActiveInstance();
+    console.log("TEST" + snarky.Mina.transaction());
+    snarky.Mina.sendTransaction(snarky.Mina.transaction(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
+    
+    snarky.Mina.sendTransaction(Transaction.fromBase58(_Transaction));
+    */
   });
 
 module.exports = router;
