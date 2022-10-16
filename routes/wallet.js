@@ -1,80 +1,50 @@
 const express = require('express');
-const mysql = require('mysql');
 const router = express.Router();
 const lightwallet = require("eth-lightwallet");
 const fs = require('fs');
 const MinaSDK = require("@o1labs/client-sdk");
 const snarky = require('snarkyjs');
 const { PublicKey, PrivateKey } = require('snarkyjs');
-//const fetch = require('node-fetch');
 const axios = require('axios');
 
-/*
-* DB : mysql
-*/
-/*
-const connection = mysql.createConnection({
-    host : 'localhost',
-    user : 'root',
-    password : '1234', 
-    database : 'user_table' 
-})
 
-connection.connect();
+/*
+* Devnet GraphQL URL
 */
-
 const graphql_url = "https://mina-devnet-graphql.aurowallet.com/graphql";
 
-router.post("/test", async (req, res) => {
-    console.log(snarky);
-    const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
-    snarky.setGraphqlEndpoint(url);
 
-    const _address = await snarky.fetchAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U'));
-        
-    console.log("@#@#@#@ " + _address);
-    console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
-    console.log(snarky.Mina.BerkeleyQANet("url").hasAccount(PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS')));
-    console.log(snarky.Mina.hasAccount(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
-    console.log(snarky.Mina.hasAccount(PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS')));
-});
-
-
+/*
+* 공개키, 비밀키 발급
+*/
 router.post("/register", async (req, res) => {
   /*
   * MinaSDK.genKeys();
-  * => 개인키로 공개키를 생성
-  * param : privateKey
+  * => 개인키, 공개키 생성
   * return : publickey
   */
   let keys = MinaSDK.genKeys();
-  console.log("Mina Test 1 : "+keys);
-  // Mina Test 1 : [object Object]
-  console.log("Mina Test 1-1 : "+keys.privateKey);
-  // Mina Test 1-1 : EKEtivMqPreVkMR6cyhM1HcbQUkyrL3Eayya6ub82BG7UhLDSRgQ
-  console.log("Mina Test 1-2 : "+keys.publicKey);
-  // Mina Test 1-2 : B62qimuvZxZxzXX7iAakYVAGqGptds41jAeESHR8sTDtAVcEnKybFX2
+  //console.log("Mina Test 1 : "+keys);
+  //console.log("Mina Test 1-1 : "+keys.privateKey);
+  //console.log("Mina Test 1-2 : "+keys.publicKey);
+  
   /*
   * MinaSDK.signMessage();
-  * => 개인키&공개키를 넣고, 특정 단어(원본 데이터)에 서명을 하면, 서명값과 원본데이터(페이로드)가 리턴 
+  * => 개인키&공개키를 넣고, 특정 단어(니모닉)에 서명을 하면, 서명값과 원본데이터(페이로드)가 리턴 
   * param : privateKey & publickey
   * return : publickey, signature, payload
   */
   const mnemonic = lightwallet.keystore.generateRandomSeed();
-  console.log("Mina Test 3 : " + mnemonic);
 
   let signed = MinaSDK.signMessage(mnemonic, keys);
-  console.log("Mina Test 2 : "+signed);
-  // Mina Test 2 : [object Object]
-  console.log("Mina Test 2-1 : "+signed.publicKey);
-  // Mina Test 2-1 : B62qimuvZxZxzXX7iAakYVAGqGptds41jAeESHR8sTDtAVcEnKybFX2
-  console.log("Mina Test 2-2 : "+signed.signature);
-  // Mina Test 2-2 : [object Object]
-  console.log("Mina Test 2-3 : "+signed.payload);
-  // Mina Test 2-3 : world
+  // console.log("Mina Test 2 : "+signed);
+  // console.log("Mina Test 2-1 : "+signed.publicKey);
+  // console.log("Mina Test 2-2 : "+signed.signature);
+  // console.log("Mina Test 2-3 : "+signed.payload);
+  
   /*
   * MinaSDK.verifyMessage();
-  * => 서명의 변경 유무 체크?  
+  * => 서명의 변경 유무 체크
   * @param key - The keypair used to sign the transaction
   * @returns Boolean (A signed payment transaction)
   */
@@ -94,9 +64,16 @@ router.post("/register", async (req, res) => {
     },
     keys
   );
+
   })
   ;
   
+
+  /*
+  * 계좌 잔액 조회용 쿼리 
+  * param : publickey
+  * return : total(balance), nonce value 
+  */
   const getAccountInfoQuery = (publicKey) => {
     return `{account(publicKey: \"${publicKey}\") {
           balance {
@@ -107,8 +84,12 @@ router.post("/register", async (req, res) => {
       }}`;
   };
   
+  /*
+  * 계좌 잔액 조회 api 
+  */
   router.get("/balance", async (req, res) => {
-      //console.log(snarky);
+      
+      //발급받은 공개키 셋팅
       const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
       let resultInfo = {};
   
@@ -129,7 +110,8 @@ router.post("/register", async (req, res) => {
           console.log(`balance total: ${_account.balance.total}`);
           console.log(`delegate: ${_account.delegate}`);
           console.log(`nonce: ${_account.nonce}`);
-
+          
+          //조회된 잔액을 리턴
           res.json({ message: "ok", data: resultInfo });
         })
         .catch((err) => {
@@ -137,6 +119,12 @@ router.post("/register", async (req, res) => {
         })
   });
 
+
+  /*
+  * 송금을 위한 쿼리 
+  * param : fee, amount, to_publicKey, from_publicKey, memo, nonce, validUtil, field, scalar
+  * return : hash value
+  */
   const getSendPaymentQuery = (fee, amount, to_publicKey, from_publicKey, memo, nonce, validUtil, field, scalar) => {
     return `mutation {sendPayment(
         input: {
@@ -159,22 +147,27 @@ router.post("/register", async (req, res) => {
       }
     }`;
   };
-
+  
+  /*
+  * 송금 api 
+  */
   router.post("/send", async (req, res) => {
 
     console.log(" !!! START _preTransaction signedPayment method !!!")
-      
+    
+    //보내는 사람의 pubkey와 받는 사람의 pubkey 설정
     const _to = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
-    console.log(" !!! Test 01 !!!" + _to);
+    //console.log(" !!! Test 01 !!!" + _to);
     const _from = 'B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS';
-    console.log(" !!! Test 02 !!!" + _from);
+    //console.log(" !!! Test 02 !!!" + _from);
+    //보내는 사람의 Private key 셋팅 
     const _pkKey = 'EKE25kcSt1Jg8xkcQy6ZYSnzbNi3MZ39PGgD2k4D9ZdfgkF7KB4V';
-    console.log(" !!! Test 03 !!!" + _pkKey);
+    //console.log(" !!! Test 03 !!!" + _pkKey);
     const keys = {privateKey: _pkKey, publicKey: _from}
     
-    console.log(" !!! Test 04 !!!" + keys);
-
+    //논스값은 중복 검증을 위한 값으로 가장 최근의 논스값을 가져오기 위해 '0'으로 셋팅
     let _nonce = 0;
+
     // get nonce to use.
     await axios.get(graphql_url, {
           params: {
@@ -191,13 +184,15 @@ router.post("/register", async (req, res) => {
           console.log(err);
         })
 
-    console.log(" !!! Sending Mina !!!");
+    console.log(" !!! Find Nonce Value !!!");
     
 
+    //송금을 위한 정보 셋팅
     try{
       const _amount = 1000000000;
       const _fee = 10000000;
       const _memo = "send mina test";
+      //송금 실행
       const signedPayment = MinaSDK.signPayment(
         {
           to: _to,
@@ -210,6 +205,8 @@ router.post("/register", async (req, res) => {
         keys
       );
       
+
+      //송금 실행 정보 브로드캐스팅 쿼리 
       const sendPaymentQuery = getSendPaymentQuery(_fee, _amount, _to, _from, _memo, _nonce,
         signedPayment.payload.validUntil, signedPayment.signature.field, signedPayment.signature.scalar);
       await axios.get(graphql_url, {
@@ -232,24 +229,6 @@ router.post("/register", async (req, res) => {
 
     console.log(" !!! End Sending!!!");
 
-    /*
-    * 송금을 위한 transaction id 생성 
-    * mina.ts 참고 
-    * sendTransaction의 파라미터는 trasaction임. 
-    * transaction의 파마미터는 FeePayerSpec임 
-    * 
-    *  param : 
-    *  return : transactionid 
-    console.log(" !!! START _preTransaction method !!!");
-    const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
-  
-
-    snarky.Mina.setActiveInstance();
-    console.log("TEST" + snarky.Mina.transaction());
-    snarky.Mina.sendTransaction(snarky.Mina.transaction(PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U')));
-    
-    snarky.Mina.sendTransaction(Transaction.fromBase58(_Transaction));
-    */
   });
 
 module.exports = router;
