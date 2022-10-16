@@ -23,6 +23,8 @@ const connection = mysql.createConnection({
 connection.connect();
 */
 
+const graphql_url = "https://mina-devnet-graphql.aurowallet.com/graphql";
+
 router.post("/test", async (req, res) => {
     console.log(snarky);
     const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
@@ -107,7 +109,6 @@ router.post("/register", async (req, res) => {
   
   router.get("/balance", async (req, res) => {
       //console.log(snarky);
-      const url = "https://mina-devnet-graphql.aurowallet.com/graphql";
       const _publicKey = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
       let resultInfo = {};
   
@@ -136,11 +137,32 @@ router.post("/register", async (req, res) => {
         })
   });
 
+  const getSendPaymentQuery = (fee, amount, to_publicKey, from_publicKey, memo, nonce, validUtil, field, scalar) => {
+    return `mutation {sendPayment(
+        input: {
+          fee: \"${fee}\",
+          amount: \"${amount}\",
+          to: \"${to_publicKey}\",
+          from: \"${from_publicKey}\",
+          memo: \"${memo}\",
+          nonce: \"${nonce}\",
+          validUntil: \"${validUtil}\"
+        },
+        signature: {
+          field: \"${field}\", 
+          scalar: \"${scalar}\"
+        }) {
+        payment {
+          hash,
+          id
+        }
+      }
+    }`;
+  };
 
   router.post("/send", async (req, res) => {
 
-    console.log(" !!! START _preTransaction signedPayment method !!!");
-
+    console.log(" !!! START _preTransaction signedPayment method !!!")
       
     const _to = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
     console.log(" !!! Test 01 !!!" + _to);
@@ -152,35 +174,57 @@ router.post("/register", async (req, res) => {
     
     console.log(" !!! Test 04 !!!" + keys);
 
+    let _nonce = 0;
+    // get nonce to use.
+    await axios.get(graphql_url, {
+          params: {
+            query: `${getAccountInfoQuery(_from)}`
+          }
+        })
+        .then((result) => {
+          const _data = result.data.data;
+          const _account = _data.account;
+          _nonce = _account.nonce;
+          console.log(`nonce: ${_nonce}`);
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+
+    console.log(" !!! Sending Mina !!!");
+    
+
     try{
+      const _amount = 1000000000;
+      const _fee = 10000000;
+      const _memo = "send mina test";
       const signedPayment = MinaSDK.signPayment(
         {
           to: _to,
           from: _from,
-          amount: 5000000000,
-          fee: 1000000000,
-          nonce: 4,
-          memo:"send mina test"
+          amount: _amount,
+          fee: _fee,
+          nonce: _nonce,
+          memo: _memo
         },
         keys
       );
       
-      const url = "https://devnet.minaexplorer.com/broadcast-tx";
-      console.log(JSON.stringify(signedPayment));
-      axios.post(url, {
-        publicKey: signedPayment.publicKey,
-        signature: signedPayment.signature,
-        payload: signedPayment.payload
+      const sendPaymentQuery = getSendPaymentQuery(_fee, _amount, _to, _from, _memo, _nonce,
+        signedPayment.payload.validUntil, signedPayment.signature.field, signedPayment.signature.scalar);
+      await axios.get(graphql_url, {
+        params: {
+          query: `${sendPaymentQuery}`
+        }
       })
       .then((result) => {
         console.log(result);
+        res.send(`hash: ${result.data.data.sendPayment.payment.hash}
+        id: ${result.data.data.sendPayment.payment.id}`);
       })
       .catch((err) => {
-        console.log("broadcasting error : "+err);
-      });
-
-
-
+        console.log("broadcasting error : " + err);
+      })
 
     }catch(exception){
       console.log("@@@@@ FAIL @@@@@" +exception);
