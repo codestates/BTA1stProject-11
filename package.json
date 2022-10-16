@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@o1labs/client-sdk": "^1.0.1",
+    "@o1labs/client-sdk": "^0.2.5",
     "axios": "^1.1.2",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",

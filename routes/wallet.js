@@ -157,21 +157,28 @@ router.post("/register", async (req, res) => {
         {
           to: _to,
           from: _from,
-          amount: 10000000000,
+          amount: 5000000000,
           fee: 1000000000,
-          nonce: 0,
+          nonce: 4,
           memo:"send mina test"
         },
         keys
       );
       
+      const url = "https://devnet.minaexplorer.com/broadcast-tx";
+      console.log(JSON.stringify(signedPayment));
+      axios.post(url, {
+        publicKey: signedPayment.publicKey,
+        signature: signedPayment.signature,
+        payload: signedPayment.payload
+      })
+      .then((result) => {
+        console.log(result);
+      })
+      .catch((err) => {
+        console.log("broadcasting error : "+err);
+      });
 
-      console.log(" !!! Start signStakeDelegation ===================== !!!");
-      const _signStakeDelgation = MinaSDK.signStakeDelegation(signedPayment.payload, keys)
-      console.log(" !!! End  signStakeDelegation ====================== !!!"+ _signStakeDelgation);
-      console.log(" !!! Start _verifyPaymentSignature ===================== !!!");
-      const _verifyPaymentSignature = MinaSDK.verifyPaymentSignature(_signStakeDelgation.payload);
-      console.log(" !!! End  _verifyPaymentSignature ====================== !!!"+ _verifyPaymentSignature);
 
 
 

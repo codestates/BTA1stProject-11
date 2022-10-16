@@ -22,7 +22,7 @@
   * https://devnet.minaexplorer.com/ (scan block)
   * https://docs.aurowallet.com/general/ (Auro Wallet Docs)
   * https://github.com/MinaProtocol/mina/blob/develop/frontend/client_sdk/src/MinaSDK.d.ts (Mina SDK github)
-  * 
+  * https://www.coinbase.com/cloud/discover/protocol-guides/guide-to-mina (Mina protocol)
 
 🔨[Setting Mina Devnet node]
 ============================
