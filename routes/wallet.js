@@ -142,30 +142,43 @@ router.post("/register", async (req, res) => {
     console.log(" !!! START _preTransaction signedPayment method !!!");
 
       
-    const _to = PublicKey.fromBase58('B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U');
+    const _to = 'B62qiU6qMUnKzkLC2RxSs2gxvusLhfMrpqfgnwvUxE7woBKfSHJu79U';
     console.log(" !!! Test 01 !!!" + _to);
-    const _from = PublicKey.fromBase58('B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS');
+    const _from = 'B62qmxbgnBUH8GQc5deTywqv7NYsXvLsADjTr2cKDdmtHxEMJBi32vS';
     console.log(" !!! Test 02 !!!" + _from);
-    const _pkKey = PrivateKey.fromBase58('EKE25kcSt1Jg8xkcQy6ZYSnzbNi3MZ39PGgD2k4D9ZdfgkF7KB4V');
+    const _pkKey = 'EKE25kcSt1Jg8xkcQy6ZYSnzbNi3MZ39PGgD2k4D9ZdfgkF7KB4V';
     console.log(" !!! Test 03 !!!" + _pkKey);
-    const keys = {_pkKey, _to}
+    const keys = {privateKey: _pkKey, publicKey: _from}
     
     console.log(" !!! Test 04 !!!" + keys);
 
+    try{
+      const signedPayment = MinaSDK.signPayment(
+        {
+          to: _to,
+          from: _from,
+          amount: 10000000000,
+          fee: 1000000000,
+          nonce: 0,
+          memo:"send mina test"
+        },
+        keys
+      );
+      
 
-    const signedPayment = MinaSDK.signPayment(
-      {
-        to: _from,
-        from: _to,
-        amount: 10,
-        fee: 1,
-        nonce: 0,
-      },
-      keys
-    );
+      console.log(" !!! Start signStakeDelegation ===================== !!!");
+      const _signStakeDelgation = MinaSDK.signStakeDelegation(signedPayment.payload, keys)
+      console.log(" !!! End  signStakeDelegation ====================== !!!"+ _signStakeDelgation);
+      console.log(" !!! Start _verifyPaymentSignature ===================== !!!");
+      const _verifyPaymentSignature = MinaSDK.verifyPaymentSignature(_signStakeDelgation.payload);
+      console.log(" !!! End  _verifyPaymentSignature ====================== !!!"+ _verifyPaymentSignature);
 
-    console.log(" !!! Sending Mina !!!");
-    signedPayment();
+
+
+    }catch(exception){
+      console.log("@@@@@ FAIL @@@@@" +exception);
+    }
+
     console.log(" !!! End Sending!!!");
 
     /*
