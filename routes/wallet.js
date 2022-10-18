@@ -24,6 +24,7 @@ router.post("/register", async (req, res) => {
   * return : publickey
   */
   let keys = MinaSDK.genKeys();
+  console.log("Register : Making keys pair "+keys);
   //console.log("Mina Test 1 : "+keys);
   //console.log("Mina Test 1-1 : "+keys.privateKey);
   //console.log("Mina Test 1-2 : "+keys.publicKey);
@@ -35,9 +36,10 @@ router.post("/register", async (req, res) => {
   * return : publickey, signature, payload
   */
   const mnemonic = lightwallet.keystore.generateRandomSeed();
+  console.log("Register : Making Mnemonic Word "+mnemonic);
 
   let signed = MinaSDK.signMessage(mnemonic, keys);
-  // console.log("Mina Test 2 : "+signed);
+  console.log("Register sigend : "+signed);
   // console.log("Mina Test 2-1 : "+signed.publicKey);
   // console.log("Mina Test 2-2 : "+signed.signature);
   // console.log("Mina Test 2-3 : "+signed.payload);
@@ -94,7 +96,7 @@ router.post("/register", async (req, res) => {
       let resultInfo = {};
   
       axios
-        .get(url, {
+        .get(graphql_url, {
           params: {
             query: `${getAccountInfoQuery(_publicKey)}`
           }
